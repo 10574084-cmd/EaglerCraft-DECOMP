@@ -110,7 +110,7 @@ button:hover{border-color:var(--cyan)}
     return -1;
   }
   function scriptPayload(html, id) {
-    const re = new RegExp('<script\\b(?=[^>]*\\bid="' + id + '"[^>]*)>([\\s\\S]*?)</script\\s*>','i');
+    const re = new RegExp('<script\\b(?=[^>]*\\bid="' + id + '")[^>]*>([\\s\\S]*?)</script\\s*>','i');
     const match = html.match(re);
     if (!match) throw new Error('Missing inline payload: '+id);
     const b64 = match[1].replace(/\s+/g,'');
