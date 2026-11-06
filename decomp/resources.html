@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080b12">
+<title>VIBE DECOMP // Resource Explorer</title>
+<style>
+:root{color-scheme:dark;--bg:#080b12;--panel:#111a28;--line:#26374c;--text:#e8f1fb;--muted:#91a4bc;--cyan:#57e2df}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -10%,#182b42 0,#080b12 54%);color:var(--text);font:14px/1.5 Inter,system-ui,sans-serif}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;border-bottom:1px solid var(--line);background:#090f19ed;backdrop-filter:blur(16px)}
+.brand{font-weight:900;letter-spacing:.14em}.brand small{display:block;color:var(--cyan);font-size:9px;letter-spacing:.2em}
+header a{color:var(--cyan);text-decoration:none;font-size:12px;font-weight:700}
+main{max-width:1380px;margin:0 auto;padding:24px}
+.hero{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:20px;margin:12px 0 22px}
+h1{font-size:clamp(26px,4vw,42px);margin:8px 0 4px;line-height:1.06}
+.muted{color:var(--muted);font-size:12px}
+.eyebrow{font-size:10px;letter-spacing:.19em;font-weight:800;color:var(--cyan)}
+.pick{display:inline-flex;gap:10px;align-items:center;padding:12px 16px;border:1px solid #3b8a91;border-radius:10px;background:#123743;color:white;font-weight:800;font-size:12px;cursor:pointer}
+.pick input{display:none}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}
+.stat{padding:14px;border:1px solid var(--line);border-radius:12px;background:#0e1724}
+.stat b{display:block;color:var(--cyan);font-size:21px}.stat span{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.toolbar{position:sticky;top:64px;z-index:4;display:flex;gap:9px;flex-wrap:wrap;padding:12px;border:1px solid var(--line);border-radius:13px;background:#0d1623f2;backdrop-filter:blur(14px)}
+input,select,button{font:inherit}
+input[type=search],select{min-height:39px;padding:8px 11px;border:1px solid #31455c;border-radius:8px;background:#08111d;color:var(--text);outline:none}
+input[type=search]{flex:1;min-width:180px}
+select{min-width:125px}
+button{border:1px solid #344a62;border-radius:8px;background:#142337;color:var(--text);font-size:11px;font-weight:800;padding:9px 12px;cursor:pointer}
+button:hover{border-color:var(--cyan)}
+#count{align-self:center;color:var(--muted);font-size:11px;margin-left:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:11px;margin-top:16px}
+.item{overflow:hidden;min-width:0;border:1px solid var(--line);border-radius:11px;background:#0e1724;cursor:pointer;transition:.15s}
+.item:hover{border-color:#56d6d2;transform:translateY(-2px)}
+.thumb{height:116px;display:grid;place-items:center;background:#070d16;border-bottom:1px solid #223248;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.thumb .fileIcon{font-size:29px;color:#8cb4c1}
+.itemText{padding:9px}.itemText b{display:block;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.itemText span{font-size:9px;color:var(--muted)}
+#more{display:block;margin:18px auto}
+#empty{padding:50px 20px;text-align:center;border:1px dashed #34475b;border-radius:12px;color:var(--muted);margin-top:16px}
+#detail{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:18px;background:#000b}
+#detail.open{display:flex}
+.detailBox{width:min(860px,100%);max-height:90vh;overflow:auto;border:1px solid #3b526d;border-radius:16px;background:#0b1421;box-shadow:0 24px 80px #000d}
+.detailHead{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);background:#0d1725}
+#detailName{font-size:11px;overflow-wrap:anywhere}
+.detailBody{padding:16px}
+#previewImage{display:block;max-width:100%;max-height:65vh;margin:auto;object-fit:contain;image-rendering:pixelated}
+#previewText{max-height:65vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;padding:13px;border-radius:9px;background:#060d16;color:#d4e7f2;font:11px/1.5 ui-monospace,monospace}
+#detailMeta{font-size:10px;color:var(--muted);margin:0 0 10px}
+.info{margin-top:18px;padding:14px;border:1px solid #293d54;border-radius:11px;background:#101d2c;color:var(--muted);font-size:11px;line-height:1.6}
+.hidden{display:none!important}
+@media(max-width:700px){main{padding:15px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}header{padding:12px}.toolbar{top:58px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">VIBE DECOMP<small>26.3 · RESOURCE EXPLORER</small></div>
+  <a href="../index.html">← BACK TO CLIENT</a>
+</header>
+<main>
+  <section class="hero">
+    <div><div class="eyebrow">ENGINE ASSETS & DATA</div><h1>Resource Explorer</h1><div class="muted">Extrae y explora imágenes, JSON, modelos, shaders y metadatos del build local.</div></div>
+    <label class="pick">＋ OPEN 26.3-WASM.HTML<input id="buildFile" type="file" accept=".html,.htm,text/html"></label>
+  </section>
+  <section class="stats">
+    <div class="stat"><b id="statFiles">—</b><span>Resource files</span></div>
+    <div class="stat"><b id="statImages">—</b><span>Images / PNG</span></div>
+    <div class="stat"><b id="statJson">—</b><span>JSON data files</span></div>
+    <div class="stat"><b id="statSounds">—</b><span>Sound entries</span></div>
+  </section>
+  <section class="toolbar">
+    <input id="search" type="search" placeholder="Search resource path, e.g. stone, entity, blockstates…">
+    <select id="kind"><option value="all">All types</option><option value="png">Images</option><option value="json">JSON data</option><option value="nbt">NBT data</option><option value="shader">Shaders</option><option value="mcmeta">Metadata</option><option value="zip">ZIP packages</option></select>
+    <button id="exportIndex">EXPORT INDEX JSON</button>
+    <span id="count">No build loaded</span>
+  </section>
+  <div id="empty"><b>No resources loaded yet.</b><br><br>Select your supplied <code>26.3-wasm.html</code> file. The page reads it locally in your browser and does not upload it anywhere.</div>
+  <section id="gallery" class="grid"></section>
+  <button id="more" class="hidden">LOAD MORE</button>
+  <div class="info">This viewer extracts data from the EPK packages embedded in your selected client HTML. PNG images are shown as previews; JSON files can be inspected and downloaded individually. The full client and its assets are not uploaded to this GitHub repository by this tool.</div>
+</main>
+<div id="detail">
+  <div class="detailBox">
+    <div class="detailHead"><b id="detailName"></b><button id="closeDetail">CLOSE ×</button></div>
+    <div class="detailBody"><p id="detailMeta"></p><img id="previewImage" class="hidden"><pre id="previewText" class="hidden"></pre><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="downloadFile">DOWNLOAD FILE</button></div></div>
+  </div>
+</div>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const enc = new TextEncoder();
+  const dec = new TextDecoder();
+  let files = [];
+  let currentFile = null;
+  let visibleLimit = 90;
+  let selectedBuildName = '';
+  let assetSummary = null;
+  const objectUrls = new Map();
+
+  function findBytes(haystack, needle, start=0) {
+    outer: for (let i=start; i<=haystack.length-needle.length; i++) {
+      for (let j=0;j<needle.length;j++) if (haystack[i+j] !== needle[j]) continue outer;
+      return i;
+    }
+    return -1;
+  }
+  function scriptPayload(html, id) {
+    const re = new RegExp('<script\\b(?=[^>]*\\bid=["\\']'+id+'["\\'])[^>]*>([\\s\\S]*?)</script\\s*>','i');
+    const match = html.match(re);
+    if (!match) throw new Error('Missing inline payload: '+id);
+    const b64 = match[1].replace(/\\s+/g,'');
+    const raw = atob(b64);
+    const out = new Uint8Array(raw.length);
+    for (let i=0;i<raw.length;i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+  async function unpackGzipPayload(payload, name) {
+    const header = enc.encode('world name:');
+    const h = findBytes(payload, header);
+    const separator = findBytes(payload, new Uint8Array([10,10]), h);
+    const gzip = findBytes(payload, new Uint8Array([31,139]), separator+2);
+    if (h<0 || separator<0 || gzip<0) throw new Error('Cannot locate EPK gzip stream: '+name);
+    if (!('DecompressionStream' in window)) throw new Error('This browser does not support DecompressionStream');
+    const stream = new Blob([payload.slice(gzip)]).stream().pipeThrough(new DecompressionStream('gzip'));
+    const archive = new Uint8Array(await new Response(stream).arrayBuffer());
+    let pos = findBytes(archive, enc.encode('>FILE'));
+    if (pos<0) throw new Error('EPK file table missing: '+name);
+    const found = [];
+    while (pos >= 0 && pos+5<=archive.length && archive[pos]===62 && archive[pos+1]===70 && archive[pos+2]===73 && archive[pos+3]===76 && archive[pos+4]===69) {
+      pos += 5;
+      if (pos>=archive.length) break;
+      const pathLength = archive[pos++];
+      if (pos+pathLength+4>archive.length) break;
+      const path = dec.decode(archive.subarray(pos,pos+pathLength));
+      pos += pathLength;
+      const size = ((archive[pos]*0x1000000)+(archive[pos+1]<<16)+(archive[pos+2]<<8)+archive[pos+3])>>>0;
+      pos += 4;
+      if (pos+size>archive.length) throw new Error('Broken EPK entry: '+path);
+      const data = archive.subarray(pos,pos+size);
+      pos += size;
+      found.push({path,size,data,ext:(path.split('.').pop()||'').toLowerCase(),package:name});
+      if (archive[pos]!==62 || archive[pos+1]!==70 || archive[pos+2]!==73 || archive[pos+3]!==76 || archive[pos+4]!==69) break;
+    }
+    return {found,archiveBytes:archive.length};
+  }
+  function mimeFor(file) {
+    if (file.ext==='png') return 'image/png';
+    if (file.ext==='jpg'||file.ext==='jpeg') return 'image/jpeg';
+    if (file.ext==='json'||file.ext==='mcmeta'||file.ext==='txt'||file.ext==='fsh'||file.ext==='vsh'||file.ext==='glsl') return 'text/plain;charset=utf-8';
+    if (file.ext==='zip') return 'application/zip';
+    if (file.ext==='nbt') return 'application/octet-stream';
+    return 'application/octet-stream';
+  }
+  function urlFor(file) {
+    if (!objectUrls.has(file)) objectUrls.set(file,URL.createObjectURL(new Blob([file.data],{type:mimeFor(file)})));
+    return objectUrls.get(file);
+  }
+  function stats() {
+    const counts = files.reduce((o,f)=>{o[f.ext]=(o[f.ext]||0)+1;return o;},{});
+    $('statFiles').textContent = files.length.toLocaleString();
+    $('statImages').textContent = (counts.png||0).toLocaleString();
+    $('statJson').textContent = (counts.json||0).toLocaleString();
+    $('statSounds').textContent = assetSummary?.soundsCount?.toLocaleString() || '—';
+    return counts;
+  }
+  function category(f) {
+    if (['fsh','vsh','glsl'].includes(f.ext)) return 'shader';
+    if (['mcmeta','txt'].includes(f.ext)) return 'mcmeta';
+    return f.ext;
+  }
+  function matches(f, q, kind) {
+    return (!q || f.path.toLowerCase().includes(q)) && (kind==='all'||category(f)===kind);
+  }
+  function render() {
+    const q = $('search').value.trim().toLowerCase();
+    const kind = $('kind').value;
+    const result = files.filter(f=>matches(f,q,kind));
+    const shown = result.slice(0,visibleLimit);
+    $('gallery').innerHTML = '';
+    const frag = document.createDocumentFragment();
+    shown.forEach(file=>{
+      const card = document.createElement('article');
+      card.className = 'item';
+      const thumb = document.createElement('div');
+      thumb.className = 'thumb';
+      if (file.ext==='png') {
+        const img = document.createElement('img');
+        img.loading = 'lazy';
+        img.src = urlFor(file);
+        img.alt = file.path;
+        thumb.appendChild(img);
+      } else {
+        const icon = document.createElement('div');
+        icon.className = 'fileIcon';
+        icon.textContent = file.ext==='json'?'{}':file.ext==='nbt'?'NBT':category(file)==='shader'?'⌁':file.ext.toUpperCase();
+        thumb.appendChild(icon);
+      }
+      const txt = document.createElement('div');
+      txt.className='itemText';
+      const title=document.createElement('b');title.textContent=file.path.split('/').pop();
+      const sub=document.createElement('span');sub.textContent=file.path+' · '+file.size.toLocaleString()+' B';
+      txt.append(title,sub);card.append(thumb,txt);
+      card.addEventListener('click',()=>openFile(file));
+      frag.appendChild(card);
+    });
+    $('gallery').appendChild(frag);
+    $('empty').classList.toggle('hidden',files.length>0);
+    $('count').textContent = result.length.toLocaleString()+' matching · '+shown.length.toLocaleString()+' shown';
+    $('more').classList.toggle('hidden',shown.length>=result.length);
+  }
+  function openFile(file) {
+    currentFile = file;
+    $('detailName').textContent = file.path;
+    $('detailMeta').textContent = file.package+' · '+file.ext.toUpperCase()+' · '+file.size.toLocaleString()+' bytes';
+    $('previewImage').classList.add('hidden');
+    $('previewText').classList.add('hidden');
+    if (file.ext==='png'||file.ext==='jpg'||file.ext==='jpeg') {
+      $('previewImage').src = urlFor(file);
+      $('previewImage').classList.remove('hidden');
+    } else {
+      let text = dec.decode(file.data);
+      if (file.ext==='json'||file.ext==='mcmeta') {
+        try{text=JSON.stringify(JSON.parse(text),null,2);}catch(_){}
+      } else if(file.ext==='nbt') {
+        text='NBT binary resource. Size: '+file.size+' bytes. Download it to inspect with an NBT viewer.';
+      }
+      $('previewText').textContent = text.slice(0,200000);
+      $('previewText').classList.remove('hidden');
+    }
+    $('detail').classList.add('open');
+  }
+  function downloadCurrent() {
+    if(!currentFile) return;
+    const a=document.createElement('a');
+    a.href=urlFor(currentFile);
+    a.download=currentFile.path.split('/').pop();
+    document.body.appendChild(a);a.click();a.remove();
+  }
+  function downloadIndex() {
+    const payload=files.map(f=>({package:f.package,path:f.path,type:f.ext,size:f.size}));
+    const a=document.createElement('a');
+    const url=URL.createObjectURL(new Blob([JSON.stringify({source:selectedBuildName,files:payload},null,2)],{type:'application/json'}));
+    a.href=url;a.download='eaglercraft-26.3-resource-index.json';document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),3000);
+  }
+  async function loadBuild(file) {
+    if(!file) return;
+    $('empty').textContent='Reading HTML and unpacking EPK files… this can use several hundred MB of temporary browser memory.';
+    $('empty').classList.remove('hidden');
+    $('gallery').innerHTML='';
+    $('count').textContent='Reading '+file.name+'…';
+    $('buildFile').disabled=true;
+    try {
+      const html=await file.text();
+      selectedBuildName=file.name;
+      const assets=scriptPayload(html,'eag-inline-assets');
+      const sounds=scriptPayload(html,'eag-inline-sounds');
+      const [assetResult,soundResult]=await Promise.all([
+        unpackGzipPayload(assets,'assets.epk'),
+        unpackGzipPayload(sounds,'sounds.epk')
+      ]);
+      files=assetResult.found;
+      assetSummary={soundsCount:soundResult.found.length,assetsBytes:assetResult.archiveBytes,soundsBytes:soundResult.archiveBytes};
+      stats();
+      $('empty').classList.add('hidden');
+      $('count').textContent='Loaded '+file.name;
+      visibleLimit=90;
+      render();
+    } catch(error) {
+      $('empty').innerHTML='<b>Could not read this build.</b><br><br>'+String(error.message||error);
+      $('count').textContent='Extraction failed';
+    } finally {
+      $('buildFile').disabled=false;
+    }
+  }
+  $('buildFile').addEventListener('change',e=>loadBuild(e.target.files[0]));
+  $('search').addEventListener('input',()=>{visibleLimit=90;render();});
+  $('kind').addEventListener('change',()=>{visibleLimit=90;render();});
+  $('more').addEventListener('click',()=>{visibleLimit+=90;render();});
+  $('exportIndex').addEventListener('click',downloadIndex);
+  $('closeDetail').addEventListener('click',()=>$('detail').classList.remove('open'));
+  $('detail').addEventListener('click',e=>{if(e.target===$('detail'))$('detail').classList.remove('open');});
+  $('downloadFile').addEventListener('click',downloadCurrent);
+  window.addEventListener('beforeunload',()=>objectUrls.forEach(URL.revokeObjectURL));
+})();
+</script>
+</body>
+</html>
