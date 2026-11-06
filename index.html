@@ -49,6 +49,10 @@ h1{font-size:clamp(25px,5vw,40px);line-height:1.05;margin:12px 0}
 .rangeTop{display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:10px}
 .rangeTop span:last-child{color:var(--cyan);font-variant-numeric:tabular-nums}
 input[type=range]{width:100%;accent-color:var(--cyan)}
+.docLink{display:inline-flex;align-items:center;text-decoration:none}
+.symbolList{display:grid;gap:7px;margin-top:9px}
+.symbolList code{display:block;padding:7px 8px;border:1px solid #26384d;border-radius:7px;background:#09111b;color:#c8e8ed;font-size:9px;line-height:1.4;overflow-wrap:anywhere}
+.diagOutput{white-space:pre-wrap;overflow-wrap:anywhere;max-height:180px;overflow:auto;padding:10px;border:1px solid #26384d;border-radius:8px;background:#07101a;color:#b8d6dc;font:9px/1.5 ui-monospace,SFMono-Regular,monospace}
 .fieldLabel{display:block;color:#a7b8cb;font-size:10px;font-weight:800;letter-spacing:.1em;margin:13px 0 7px}
 .textInput{width:100%;padding:11px 12px;border:1px solid #34465d;border-radius:9px;background:#080f19;color:white;font-size:11px;outline:none}
 .textInput:focus{border-color:var(--cyan)}
@@ -100,6 +104,7 @@ input[type=range]{width:100%;accent-color:var(--cyan)}
     <button class="tab active" data-tab="visual">VISUAL</button>
     <button class="tab" data-tab="client">CLIENT</button>
     <button class="tab" data-tab="wasm">WASM INFO</button>
+    <button class="tab" data-tab="symbols">SYMBOLS</button>
   </div>
   <div class="panelBody" id="tab-visual">
     <div class="sectionTitle">Visual modifiers</div>
@@ -120,16 +125,43 @@ input[type=range]{width:100%;accent-color:var(--cyan)}
     <div class="infoBox"><b>Local file note</b><p>Un archivo abierto desde el selector funciona durante esta sesión. Para auto-cargarlo en GitHub Pages, debe estar publicado en el repositorio o en un hosting externo.</p></div>
   </div>
   <div class="panelBody hidden" id="tab-wasm">
-    <div class="sectionTitle">Build inventory</div>
-    <div class="statLine"><span>Container</span><strong>Single HTML</strong></div>
-    <div class="statLine"><span>Runtime</span><strong>WebAssembly / TeaVM</strong></div>
-    <div class="statLine"><span>WASM payloads</span><strong>3 (main / mesh / server)</strong></div>
-    <div class="statLine"><span>Decoder</span><strong>Brotli WASM</strong></div>
-    <div class="statLine"><span>Resource bundles</span><strong>assets.epk / sounds.epk</strong></div>
-    <div class="infoBox"><b>Decomp status</b><p>El HTML contiene código compilado a WebAssembly y paquetes binarios. Se puede inspeccionar o desensamblar el WASM, pero no reconstruir automáticamente el proyecto Java original, sus nombres, comentarios y estructura exacta.</p></div>
-    <div class="infoBox"><b>Next reverse-engineering step</b><p>Identificar exports, imports, funciones y llamadas entre JavaScript y WASM. Para un decomp real con nombres de clases hacen falta fuentes originales, símbolos o artefactos intermedios de TeaVM.</p></div>
+    <div class="sectionTitle">Recovered build inventory</div>
+    <div class="statLine"><span>HTML container</span><strong>68.2 MB · Eaglercraft 26.3 u1</strong></div>
+    <div class="statLine"><span>Main WASM</span><strong>108.7 MB · 186,330 functions</strong></div>
+    <div class="statLine"><span>Mesh WASM</span><strong>18.2 MB · 31,641 functions</strong></div>
+    <div class="statLine"><span>Server WASM</span><strong>44.1 MB · 165,921 functions</strong></div>
+    <div class="statLine"><span>WASM imports</span><strong>99 / 57 / 72</strong></div>
+    <div class="statLine"><span>Resource packages</span><strong>21,500 assets · 4,779 sounds</strong></div>
+    <div class="infoBox"><b>What was recovered</b><p>TeaVM module metadata, imports/exports, memory requirements and 19,302 module-level namespace-symbol rows were recovered from the compiled build.</p></div>
+    <div class="infoBox"><b>What is still missing</b><p>The original Java source, comments, source layout and full method bodies are not restored. The modules contain no WebAssembly name, DWARF or source-map section.</p></div>
   </div>
-  <div id="panelFoot">RIGHT SHIFT · TOGGLE MENU &nbsp; / &nbsp; ESC · CLOSE</div>
+  <div class="panelBody hidden" id="tab-symbols">
+    <div class="sectionTitle">Recovered Java namespace identifiers</div>
+    <div class="statLine"><span>Main module</span><strong>9,319 identifiers</strong></div>
+    <div class="statLine"><span>Mesh module</span><strong>2,666 identifiers</strong></div>
+    <div class="statLine"><span>Server module</span><strong>7,317 identifiers</strong></div>
+    <div class="statLine"><span>Unique across modules</span><strong>10,201 identifiers</strong></div>
+    <div class="infoBox"><b>Examples found in the build</b>
+      <div class="symbolList">
+        <code>net.minecraft.client.player.LocalPlayer</code>
+        <code>net.minecraft.client.multiplayer.ClientLevel</code>
+        <code>net.minecraft.client.renderer.LevelRenderer</code>
+        <code>net.minecraft.world.entity.Entity</code>
+        <code>net.lax1dude.eaglercraft.v1_8.internal.PlatformInput$VKeyEvent</code>
+        <code>net.lax1dude.eaglercraft.v1_8.internal.PlatformWebRTC$LANPeer</code>
+        <code>net.lax1dude.eaglercraft.v1_8.internal.teavm.ClientMain$2</code>
+      </div>
+    </div>
+    <div class="buttonRow">
+      <a class="actionBtn docLink" href="./decomp/REVERSE_ENGINEERING.md" target="_blank" rel="noopener">Open decomp report</a>
+      <a class="actionBtn docLink" href="./decomp/wasm-symbols.csv" target="_blank" rel="noopener">Open symbol index</a>
+    </div>
+    <div class="sectionTitle" style="margin-top:16px">Live runtime diagnostics</div>
+    <div class="buttonRow"><button class="actionBtn primary" id="refreshDiag">Refresh diagnostics</button></div>
+    <pre class="diagOutput" id="diagOutput">Load the client, then press Refresh diagnostics.</pre>
+    <div class="infoBox"><b>VIBE mod integration</b><p>The current menu has verified page-level visual effects. The runtime report is read-only; game-state mods need a stable client bridge before they can be implemented honestly.</p></div>
+  </div>
+  <div id="panelFoot">RIGHT SHIFT · TOGGLE MENU &nbsp; / &nbsp; ESC · CLOSE</div>RIGHT SHIFT · TOGGLE MENU &nbsp; / &nbsp; ESC · CLOSE</div>
 </aside>
 
 <div id="crosshair"></div>
@@ -188,11 +220,52 @@ input[type=range]{width:100%;accent-color:var(--cyan)}
     const open = typeof force === 'boolean' ? force : !panel.classList.contains('open');
     panel.classList.toggle('open',open);
   }
+  function refreshRuntimeDiag(){
+    const output = $('diagOutput');
+    if(!output) return;
+    try{
+      const win = frame.contentWindow;
+      if(!win || frame.style.display === 'none'){
+        output.textContent = 'Client is not loaded.';
+        return;
+      }
+      const opts = win.eaglercraftXOpts;
+      const pool = win.__meshWorkerPool;
+      const memory = win.performance && win.performance.memory;
+      const safePool = {};
+      if(pool && typeof pool === 'object'){
+        ['workers','spawned','ready','jobs','completedJobs','errors','inFlight','deltas','heapPressure'].forEach(key=>{
+          if(typeof pool[key] !== 'undefined') safePool[key] = pool[key];
+        });
+      }
+      const diagnostics = {
+        sameOriginAccess: true,
+        gameReady: win.__eaglerGameReady === true,
+        options: opts ? {
+          singleThreadMode: opts.singleThreadMode,
+          serverWorker: opts.serverWorker,
+          meshWorkers: opts.meshWorkers,
+          meshWorkerCount: opts.meshWorkerCount
+        } : 'eaglercraftXOpts not exposed',
+        meshWorkerPool: pool ? safePool : 'not initialized',
+        shaderPack: win.__eaglerShaderPack ? 'present' : 'not exposed',
+        memory: memory ? {
+          usedMB: Math.round(memory.usedJSHeapSize/1048576),
+          totalMB: Math.round(memory.totalJSHeapSize/1048576),
+          limitMB: Math.round(memory.jsHeapSizeLimit/1048576)
+        } : 'performance.memory unavailable'
+      };
+      output.textContent = JSON.stringify(diagnostics,null,2);
+    }catch(error){
+      output.textContent = 'Runtime access unavailable. The client may be hosted on another origin.\n'+String(error);
+    }
+  }
   function setLoaded(label){
     frame.style.display = 'block';
     missing.classList.add('hidden');
     status.textContent = label || 'Loaded';
     notify('Client loaded');
+    refreshRuntimeDiag();
   }
   function setMissing(message){
     frame.style.display = 'none';
@@ -252,6 +325,7 @@ input[type=range]{width:100%;accent-color:var(--cyan)}
     apply();
     notify('Visual settings reset');
   });
+  $('refreshDiag').addEventListener('click',refreshRuntimeDiag);
   $('reloadClient').addEventListener('click',()=>{
     if(!frame.src || frame.style.display==='none'){notify('Load a client first');return;}
     try{frame.contentWindow.location.reload();}catch(_){frame.src=frame.src;}
