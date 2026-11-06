@@ -360,11 +360,11 @@ button:hover{border-color:var(--cyan)}
       selectedBuildName=file.name;
       const assets=scriptPayload(html,'eag-inline-assets');
       const sounds=scriptPayload(html,'eag-inline-sounds');
-      const [assetResult,soundResult]=await Promise.all([
-        unpackGzipPayload(assets,'assets.epk'),
-        unpackGzipPayload(sounds,'sounds.epk')
-      ]);
+      const assetResult=await unpackGzipPayload(assets,'assets.epk');
       files=assetResult.found;
+      stats();
+      $('count').textContent='Assets loaded. Reading sounds…';
+      const soundResult=await unpackGzipPayload(sounds,'sounds.epk');
       soundFiles=soundResult.found;
       assetSummary={soundsCount:soundFiles.length,assetsBytes:assetResult.archiveBytes,soundsBytes:soundResult.archiveBytes};
       stats();
