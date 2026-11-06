@@ -119,6 +119,14 @@ button:hover{border-color:var(--cyan)}
     for (let i=0;i<raw.length;i++) out[i] = raw.charCodeAt(i);
     return out;
   }
+  function crc32(data) {
+    let crc=0xffffffff;
+    for(let i=0;i<data.length;i++){
+      crc ^= data[i];
+      for(let bit=0;bit<8;bit++) crc=(crc&1)?(0xedb88320^(crc>>>1)):(crc>>>1);
+    }
+    return (crc^0xffffffff)>>>0;
+  }
   async function unpackGzipPayload(payload, name) {
     const header = enc.encode('world name:');
     const h = findBytes(payload, header);
@@ -141,9 +149,21 @@ button:hover{border-color:var(--cyan)}
       const size = ((archive[pos]*0x1000000)+(archive[pos+1]<<16)+(archive[pos+2]<<8)+archive[pos+3])>>>0;
       pos += 4;
       if (pos+size>archive.length) throw new Error('Broken EPK entry: '+path);
-      const data = archive.subarray(pos,pos+size);
+      const record = archive.subarray(pos,pos+size);
       pos += size;
-      found.push({path,size,data,ext:(path.split('.').pop()||'').toLowerCase(),package:name});
+      // EPK v2 records are: CRC32 (4 bytes) + file bytes + trailing ':' (1 byte).
+      // The old viewer exposed the checksum and delimiter as part of each file,
+      // which made PNG previews invalid and JSON appear corrupted.
+      if (size < 5 || record[record.length-1] !== 0x3a) {
+        throw new Error('Invalid EPK v2 record footer: '+path);
+      }
+      const expectedCrc = ((record[0]<<24)|(record[1]<<16)|(record[2]<<8)|record[3]) >>> 0;
+      const data = record.subarray(4,record.length-1);
+      const actualCrc = crc32(data);
+      if (actualCrc !== expectedCrc) {
+        throw new Error('CRC32 validation failed for '+path);
+      }
+      found.push({path,size:data.length,data,crc32:expectedCrc,ext:(path.split('.').pop()||'').toLowerCase(),package:name});
       if (archive[pos]!==62 || archive[pos+1]!==70 || archive[pos+2]!==73 || archive[pos+3]!==76 || archive[pos+4]!==69) break;
     }
     return {found,archiveBytes:archive.length};
@@ -366,7 +386,7 @@ button:hover{border-color:var(--cyan)}
       $('count').textContent='Assets loaded. Reading sounds…';
       const soundResult=await unpackGzipPayload(sounds,'sounds.epk');
       soundFiles=soundResult.found;
-      assetSummary={soundsCount:soundFiles.length,assetsBytes:assetResult.archiveBytes,soundsBytes:soundResult.archiveBytes};
+      assetSummary={soundsCount:soundFiles.length,assetsBytes:assetResult.archiveBytes,soundsBytes:soundResult.archiveBytes,assetsCRCVerified:true,soundsCRCVerified:true};
       stats();
       $('empty').classList.add('hidden');
       $('count').textContent='Loaded '+file.name;
