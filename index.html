@@ -32,8 +32,8 @@ h1{font-size:clamp(25px,5vw,40px);line-height:1.05;margin:12px 0}
 .panelHead strong{font-size:13px;letter-spacing:.12em}
 .panelHead span{font-size:10px;color:var(--cyan);letter-spacing:.14em}
 .closeBtn{width:29px;height:29px;border:1px solid var(--line);background:#111c2b;color:white;border-radius:8px;cursor:pointer}
-.tabs{display:flex;gap:5px;padding:10px 12px;border-bottom:1px solid var(--line)}
-.tab{flex:1;border:1px solid transparent;background:transparent;color:var(--muted);padding:9px 5px;border-radius:8px;font-size:10px;font-weight:800;letter-spacing:.08em;cursor:pointer}
+.tabs{display:flex;gap:5px;padding:10px 12px;border-bottom:1px solid var(--line);overflow-x:auto;flex-wrap:nowrap}
+.tab{flex:0 0 auto;min-width:72px;border:1px solid transparent;background:transparent;color:var(--muted);padding:9px 5px;border-radius:8px;font-size:10px;font-weight:800;letter-spacing:.08em;cursor:pointer}
 .tab.active{background:#1a2a3c;color:var(--cyan);border-color:#34566a}
 .panelBody{padding:15px;overflow:auto}
 .sectionTitle{color:#9ab0c8;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;margin:2px 0 10px}
@@ -105,6 +105,7 @@ input[type=range]{width:100%;accent-color:var(--cyan)}
     <button class="tab" data-tab="client">CLIENT</button>
     <button class="tab" data-tab="wasm">WASM INFO</button>
     <button class="tab" data-tab="symbols">SYMBOLS</button>
+    <button class="tab" data-tab="movement">MOVEMENT</button>
   </div>
   <div class="panelBody" id="tab-visual">
     <div class="sectionTitle">Visual modifiers</div>
@@ -155,11 +156,24 @@ input[type=range]{width:100%;accent-color:var(--cyan)}
     <div class="buttonRow">
       <a class="actionBtn docLink" href="./decomp/REVERSE_ENGINEERING.md" target="_blank" rel="noopener">Open decomp report</a>
       <a class="actionBtn docLink" href="./decomp/analysis.json" target="_blank" rel="noopener">Open module JSON</a>
+      <a class="actionBtn docLink" href="./decomp/resources.html" target="_blank" rel="noopener">Open image & data explorer</a>
     </div>
     <div class="sectionTitle" style="margin-top:16px">Live runtime diagnostics</div>
     <div class="buttonRow"><button class="actionBtn primary" id="refreshDiag">Refresh diagnostics</button></div>
     <pre class="diagOutput" id="diagOutput">Load the client, then press Refresh diagnostics.</pre>
-    <div class="infoBox"><b>VIBE mod integration</b><p>The current menu has verified page-level visual effects. The runtime report is read-only; game-state mods need a stable client bridge before they can be implemented honestly.</p></div>
+    <div class="infoBox"><b>VIBE mod integration</b><p>The runtime report is read-only. The Movement tab sends built-in keyboard shortcuts and authorized game commands; it does not patch WASM memory or bypass server permissions.</p></div>
+  </div>
+  <div class="panelBody hidden" id="tab-movement">
+    <div class="sectionTitle">Movement toolkit</div>
+    <div class="infoBox"><b>World / server permissions apply</b><p>Estas acciones envían teclas o comandos normales al cliente. Fly requiere modo creativo o permiso de vuelo. Noclip usa espectador y requiere permisos/cheats habilitados. No modifica ni evita las reglas del servidor.</p></div>
+    <div class="modRow"><div><div class="modName">Creative Fly</div><div class="modDesc">Activa creativo y hace doble toque de Space para volar.</div></div><button class="actionBtn primary" id="creativeFly">ENABLE</button></div>
+    <div class="modRow"><div><div class="modName">Toggle Flight</div><div class="modDesc">Envía doble Space para activar o desactivar el vuelo permitido.</div></div><button class="actionBtn" id="toggleFly">SPACE ×2</button></div>
+    <div class="modRow"><div><div class="modName">Noclip / Spectator</div><div class="modDesc">Envía /gamemode 3. El modo espectador atraviesa bloques.</div></div><button class="actionBtn primary" id="spectator">ENABLE</button></div>
+    <div class="modRow"><div><div class="modName">Return to Survival</div><div class="modDesc">Envía /gamemode 0.</div></div><button class="actionBtn" id="survival">RETURN</button></div>
+    <div class="sectionTitle" style="margin-top:18px">Movement effects</div>
+    <div class="modRow"><div><div class="modName">Speed II</div><div class="modDesc">Envía un comando vanilla de efecto. Requiere cheats u OP.</div></div><button class="actionBtn" id="speedEffect">APPLY</button></div>
+    <div class="modRow"><div><div class="modName">Jump Boost IV</div><div class="modDesc">Envía un comando vanilla de salto. Requiere cheats u OP.</div></div><button class="actionBtn" id="jumpEffect">APPLY</button></div>
+    <div class="infoBox"><b>Command bridge status</b><p id="movementStatus">Load the game client to enable keyboard helpers.</p></div>
   </div>
   <div id="panelFoot">RIGHT SHIFT · TOGGLE MENU &nbsp; / &nbsp; ESC · CLOSE</div>RIGHT SHIFT · TOGGLE MENU &nbsp; / &nbsp; ESC · CLOSE</div>
 </aside>
@@ -220,6 +234,66 @@ input[type=range]{width:100%;accent-color:var(--cyan)}
     const open = typeof force === 'boolean' ? force : !panel.classList.contains('open');
     panel.classList.toggle('open',open);
   }
+
+  function gameDocument(){
+    if(frame.style.display === 'none' || !frame.src) throw new Error('Load the game client first.');
+    const win = frame.contentWindow;
+    const doc = win && win.document;
+    if(!win || !doc) throw new Error('Game document is not available.');
+    return {win,doc};
+  }
+  function dispatchGameKey(key, code, keyCode){
+    const {win,doc} = gameDocument();
+    const active = doc.activeElement;
+    const target = active && active !== doc.body ? active : doc.body;
+    const init = {key,code,keyCode,which:keyCode,bubbles:true,cancelable:true,composed:true};
+    ['keydown','keypress','keyup'].forEach(type=>{
+      const event = new win.KeyboardEvent(type,init);
+      try{Object.defineProperty(event,'keyCode',{get:()=>keyCode});}catch(_){}
+      try{Object.defineProperty(event,'which',{get:()=>keyCode});}catch(_){}
+      target.dispatchEvent(event);
+    });
+  }
+  function keyForCharacter(character){
+    if(character === ' ') return [' ','Space',32];
+    if(character === '/') return ['/','Slash',191];
+    if(character === '-') return ['-','Minus',189];
+    if(character === '.') return ['.','Period',190];
+    if(/[a-z]/i.test(character)) return [character,'Key'+character.toUpperCase(),character.toUpperCase().charCodeAt(0)];
+    if(/[0-9]/.test(character)) return [character,'Digit'+character,character.charCodeAt(0)];
+    return [character,'',character.charCodeAt(0)];
+  }
+  function delay(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+  async function sendChatCommand(command){
+    try{
+      dispatchGameKey('t','KeyT',84);
+      await delay(100);
+      for(const character of command){
+        const key = keyForCharacter(character);
+        dispatchGameKey(key[0],key[1],key[2]);
+        await delay(12);
+      }
+      dispatchGameKey('Enter','Enter',13);
+      $('movementStatus').textContent = 'Command sent: '+command+' — the game/server decides whether it is allowed.';
+      notify('Command sent to game chat');
+    }catch(error){
+      $('movementStatus').textContent = error.message+' Click the game first, then retry.';
+      notify(error.message);
+    }
+  }
+  async function togglePermittedFlight(){
+    try{
+      dispatchGameKey(' ','Space',32);
+      await delay(140);
+      dispatchGameKey(' ','Space',32);
+      $('movementStatus').textContent = 'Double Space sent. Flight works only if the current game mode/server permits it.';
+      notify('Double Space sent');
+    }catch(error){
+      $('movementStatus').textContent = error.message;
+      notify(error.message);
+    }
+  }
+
   function refreshRuntimeDiag(){
     const output = $('diagOutput');
     if(!output) return;
@@ -326,6 +400,18 @@ input[type=range]{width:100%;accent-color:var(--cyan)}
     notify('Visual settings reset');
   });
   $('refreshDiag').addEventListener('click',refreshRuntimeDiag);
+
+  $('creativeFly').addEventListener('click',async()=>{
+    await sendChatCommand('/gamemode 1');
+    await delay(300);
+    await togglePermittedFlight();
+  });
+  $('toggleFly').addEventListener('click',togglePermittedFlight);
+  $('spectator').addEventListener('click',()=>sendChatCommand('/gamemode 3'));
+  $('survival').addEventListener('click',()=>sendChatCommand('/gamemode 0'));
+  $('speedEffect').addEventListener('click',()=>sendChatCommand('/effect @p 1 99999 1'));
+  $('jumpEffect').addEventListener('click',()=>sendChatCommand('/effect @p 8 99999 3'));
+
   $('reloadClient').addEventListener('click',()=>{
     if(!frame.src || frame.style.display==='none'){notify('Load a client first');return;}
     try{frame.contentWindow.location.reload();}catch(_){frame.src=frame.src;}
