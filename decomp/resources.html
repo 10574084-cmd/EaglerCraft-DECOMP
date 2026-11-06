@@ -134,7 +134,15 @@ button:hover{border-color:var(--cyan)}
     const gzip = findBytes(payload, new Uint8Array([31,139]), separator+2);
     if (h<0 || separator<0 || gzip<0) throw new Error('Cannot locate EPK gzip stream: '+name);
     if (!('DecompressionStream' in window)) throw new Error('This browser does not support DecompressionStream');
-    const stream = new Blob([payload.slice(gzip)]).stream().pipeThrough(new DecompressionStream('gzip'));
+    // EPK v2 appends an 8-byte :::YEE:> terminator after the gzip member.
+    // Passing that trailer into DecompressionStream makes Chrome report a corrupt gzip header.
+    const footer = enc.encode(':::YEE:>');
+    let streamEnd = payload.length;
+    if (streamEnd >= footer.length && footer.every((byte,index)=>payload[streamEnd-footer.length+index]===byte)) {
+      streamEnd -= footer.length;
+    }
+    const gzipMember = payload.slice(gzip,streamEnd);
+    const stream = new Blob([gzipMember]).stream().pipeThrough(new DecompressionStream('gzip'));
     const archive = new Uint8Array(await new Response(stream).arrayBuffer());
     let pos = findBytes(archive, enc.encode('>FILE'));
     if (pos<0) throw new Error('EPK file table missing: '+name);
