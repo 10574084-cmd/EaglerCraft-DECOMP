@@ -1,0 +1,98 @@
+{
+  "input": "26.3-wasm.html",
+  "input_bytes": 68220124,
+  "html_title": "Eaglercraft 26.3 u1",
+  "runtime": "TeaVM / WebAssembly GC",
+  "modules": {
+    "main": {
+      "compressed_bytes": 14718870,
+      "wasm_bytes": 108704404,
+      "defined_functions": 186330,
+      "import_count": 99,
+      "namespace_symbol_count": 9319,
+      "imports_by_module": {
+        "teavm": 7,
+        "teavmAsync": 1,
+        "teavmConsole": 2,
+        "teavmDate": 2,
+        "teavmJso": 67,
+        "teavmMath": 13,
+        "wasm:js-string": 7
+      }
+    },
+    "mesh": {
+      "compressed_bytes": 2299226,
+      "wasm_bytes": 18150375,
+      "defined_functions": 31641,
+      "import_count": 57,
+      "namespace_symbol_count": 2666,
+      "imports_by_module": {
+        "teavm": 6,
+        "teavmAsync": 1,
+        "teavmConsole": 2,
+        "teavmDate": 2,
+        "teavmJso": 30,
+        "teavmMath": 9,
+        "wasm:js-string": 7
+      }
+    },
+    "server": {
+      "compressed_bytes": 7792628,
+      "wasm_bytes": 44116692,
+      "defined_functions": 165921,
+      "import_count": 72,
+      "namespace_symbol_count": 7317,
+      "imports_by_module": {
+        "teavm": 6,
+        "teavmAsync": 1,
+        "teavmConsole": 2,
+        "teavmDate": 2,
+        "teavmJso": 43,
+        "teavmMath": 11,
+        "wasm:js-string": 7
+      }
+    }
+  },
+  "totals": {
+    "module_symbol_rows": 19302,
+    "unique_namespace_identifiers": 10201
+  },
+  "resource_packages": {
+    "assets": {
+      "unpacked_bytes": 20558206,
+      "file_count": 21500,
+      "extensions": {
+        "json": 15704,
+        "png": 3973,
+        "nbt": 1511,
+        "mcmeta": 213,
+        "fsh": 43,
+        "vsh": 30,
+        "glsl": 17
+      },
+      "header": "eagler-26.3"
+    },
+    "sounds": {
+      "unpacked_bytes": 34809347,
+      "file_count": 4779,
+      "extensions": {
+        "ogg": 4779
+      },
+      "header": "eagler-26.2"
+    }
+  },
+  "limitations": [
+    "No Java source tree or original comments were present.",
+    "No WebAssembly name, DWARF, or source-map custom sections were found.",
+    "Recovered namespace names do not map every WASM function index to its original Java method."
+  ],
+  "example_identifiers": [
+    "net.minecraft.client.player.LocalPlayer",
+    "net.minecraft.client.multiplayer.ClientLevel",
+    "net.minecraft.client.renderer.LevelRenderer",
+    "net.minecraft.world.entity.Entity",
+    "net.lax1dude.eaglercraft.v1_8.internal.PlatformInput$VKeyEvent",
+    "net.lax1dude.eaglercraft.v1_8.internal.PlatformWebRTC$LANPeer",
+    "net.lax1dude.eaglercraft.v1_8.internal.teavm.ClientMain$2"
+  ]
+}
