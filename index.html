@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080b12">
+<title>VIBE // EaglerCraft 26.3</title>
+<style>
+:root{color-scheme:dark;--bg:#080b12;--panel:#101725;--panel2:#151f30;--line:#26364d;--text:#e9f2ff;--muted:#8da1bb;--cyan:#56e0df;--violet:#9a83ff;--green:#70e5a4}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+button,input{font:inherit}
+#gameWrap{position:fixed;inset:0;overflow:hidden;background:#000}
+#gameFrame{display:none;position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;transform-origin:center center}
+#topbar{position:fixed;z-index:20;top:14px;left:14px;right:14px;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+.brand,.topActions{display:flex;align-items:center;gap:10px;pointer-events:auto}
+.logo{width:34px;height:34px;border:1px solid #4a7182;border-radius:10px;display:grid;place-items:center;color:var(--cyan);font-weight:900;background:#0e1c29;box-shadow:0 0 22px #56e0df1c}
+.brandText{font-size:13px;font-weight:800;letter-spacing:.14em;text-shadow:0 2px 8px #000}
+.brandText small{display:block;font-size:9px;color:#a3b4c8;font-weight:600;letter-spacing:.2em;margin-top:2px}
+.topBtn,.actionBtn{border:1px solid #34465d;background:#111c2b;color:var(--text);padding:9px 13px;border-radius:10px;font-weight:700;font-size:11px;letter-spacing:.08em;cursor:pointer;transition:.15s}
+.topBtn:hover,.actionBtn:hover{border-color:var(--cyan);background:#17283a}
+#missingState{position:fixed;inset:0;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 38%,#14283a 0,#080b12 60%)}
+.missingCard{width:min(560px,100%);padding:30px;border:1px solid #2b4058;border-radius:20px;background:#0e1623ed;box-shadow:0 22px 90px #0008}
+.eyebrow{color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:.22em;text-transform:uppercase}
+h1{font-size:clamp(25px,5vw,40px);line-height:1.05;margin:12px 0}
+.sub{color:var(--muted);font-size:13px;line-height:1.65}
+.filePick{display:inline-flex;align-items:center;gap:9px;margin-top:18px;padding:12px 16px;border-radius:10px;background:linear-gradient(100deg,#287d87,#5c55a7);color:white;font-weight:800;font-size:12px;cursor:pointer}
+.filePick input{display:none}
+#modPanel{position:fixed;z-index:30;left:16px;top:62px;bottom:16px;width:min(365px,calc(100vw - 32px));display:none;flex-direction:column;border:1px solid #2b4058;border-radius:16px;background:#0c1421f2;box-shadow:0 22px 80px #000a;backdrop-filter:blur(18px);overflow:hidden}
+#modPanel.open{display:flex}
+.panelHead{display:flex;align-items:center;justify-content:space-between;padding:16px 17px 12px;border-bottom:1px solid var(--line)}
+.panelHead strong{font-size:13px;letter-spacing:.12em}
+.panelHead span{font-size:10px;color:var(--cyan);letter-spacing:.14em}
+.closeBtn{width:29px;height:29px;border:1px solid var(--line);background:#111c2b;color:white;border-radius:8px;cursor:pointer}
+.tabs{display:flex;gap:5px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.tab{flex:1;border:1px solid transparent;background:transparent;color:var(--muted);padding:9px 5px;border-radius:8px;font-size:10px;font-weight:800;letter-spacing:.08em;cursor:pointer}
+.tab.active{background:#1a2a3c;color:var(--cyan);border-color:#34566a}
+.panelBody{padding:15px;overflow:auto}
+.sectionTitle{color:#9ab0c8;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;margin:2px 0 10px}
+.modRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #1e2b3c}
+.modRow:last-child{border-bottom:0}
+.modName{font-size:12px;font-weight:700}
+.modDesc{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.45}
+.switch{flex:none;width:39px;height:22px;border-radius:99px;border:1px solid #3b4a5c;background:#202c3c;position:relative;cursor:pointer}
+.switch:after{content:"";position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#9aa9bb;transition:.16s}
+.switch.on{background:#176d70;border-color:#4bd7d2}
+.switch.on:after{left:20px;background:white}
+.rangeRow{padding:14px 0;border-bottom:1px solid #1e2b3c}
+.rangeTop{display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:10px}
+.rangeTop span:last-child{color:var(--cyan);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--cyan)}
+.fieldLabel{display:block;color:#a7b8cb;font-size:10px;font-weight:800;letter-spacing:.1em;margin:13px 0 7px}
+.textInput{width:100%;padding:11px 12px;border:1px solid #34465d;border-radius:9px;background:#080f19;color:white;font-size:11px;outline:none}
+.textInput:focus{border-color:var(--cyan)}
+.buttonRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.actionBtn.primary{background:#155c68;border-color:#287f88}
+.actionBtn.danger{background:#38212b;border-color:#6d3549}
+.infoBox{padding:12px;border:1px solid #2a3d54;border-radius:10px;background:#101d2c;margin:10px 0}
+.infoBox b{display:block;font-size:11px;margin-bottom:5px}
+.infoBox p{font-size:10px;line-height:1.6;color:var(--muted);margin:0}
+.statLine{display:flex;justify-content:space-between;gap:12px;font-size:10px;padding:7px 0;border-bottom:1px solid #202e40;color:var(--muted)}
+.statLine strong{color:#dce9f8;text-align:right}
+#panelFoot{margin-top:auto;padding:10px 15px;border-top:1px solid var(--line);color:#71849b;font-size:9px;letter-spacing:.08em}
+#crosshair{display:none;position:fixed;z-index:12;left:50%;top:50%;width:20px;height:20px;transform:translate(-50%,-50%);pointer-events:none;filter:drop-shadow(0 1px 2px #000)}
+#crosshair:before,#crosshair:after{content:"";position:absolute;background:#fff;border-radius:2px}
+#crosshair:before{width:2px;height:18px;left:9px;top:1px}
+#crosshair:after{height:2px;width:18px;top:9px;left:1px}
+#crosshair.visible{display:block}
+#miniStatus{position:fixed;z-index:15;left:14px;bottom:12px;display:none;padding:6px 9px;border:1px solid #ffffff22;border-radius:7px;background:#07111dcc;color:#b8cadc;font-size:9px;letter-spacing:.08em;pointer-events:none}
+#miniStatus.visible{display:block}
+#toast{position:fixed;z-index:50;right:16px;bottom:16px;max-width:min(340px,calc(100vw - 32px));padding:11px 14px;border:1px solid #365b68;border-radius:10px;background:#0c1e2b;color:#d9f8f4;font-size:11px;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
+#toast.show{opacity:1;transform:translateY(0)}
+.hidden{display:none!important}
+@media(max-width:520px){#topbar{top:8px;left:8px;right:8px}.brandText{font-size:11px}.topBtn{padding:9px}.missingCard{padding:22px}#modPanel{left:8px;top:54px;bottom:8px;width:calc(100vw - 16px)}}
+</style>
+</head>
+<body>
+<div id="gameWrap">
+  <iframe id="gameFrame" title="EaglerCraft 26.3 client" allow="autoplay; fullscreen; gamepad; pointer-lock"></iframe>
+</div>
+
+<div id="missingState">
+  <div class="missingCard">
+    <div class="eyebrow">VIBE CLIENT · 26.3</div>
+    <h1>Client not loaded.</h1>
+    <p class="sub">La página ya está lista. El archivo del juego todavía no está en la raíz del repositorio. Puedes abrir el HTML de 26.3 desde tu dispositivo ahora mismo o cargarlo después desde el menú.</p>
+    <label class="filePick">＋ Abrir 26.3-wasm.html<input id="localFile" type="file" accept=".html,.htm,text/html"></label>
+    <p class="sub" style="font-size:10px;margin-top:14px">Para que se cargue automáticamente a todos los visitantes, publica el archivo como <b>26.3-wasm.html</b> en la raíz del repositorio o configura una URL externa en Client.</p>
+  </div>
+</div>
+
+<div id="topbar">
+  <div class="brand"><div class="logo">V</div><div class="brandText">VIBE CLIENT<small>EAGLERCRAFT 26.3 · WEB BUILD</small></div></div>
+  <div class="topActions"><button class="topBtn" id="menuButton">MOD MENU&nbsp; [RIGHT SHIFT]</button></div>
+</div>
+
+<aside id="modPanel" aria-label="Vibe mod menu">
+  <div class="panelHead"><div><strong>VIBE MOD MENU</strong><br><span>CLIENT-SIDE TOOLKIT</span></div><button class="closeBtn" id="closeMenu" aria-label="Cerrar">✕</button></div>
+  <div class="tabs">
+    <button class="tab active" data-tab="visual">VISUAL</button>
+    <button class="tab" data-tab="client">CLIENT</button>
+    <button class="tab" data-tab="wasm">WASM INFO</button>
+  </div>
+  <div class="panelBody" id="tab-visual">
+    <div class="sectionTitle">Visual modifiers</div>
+    <div class="modRow"><div><div class="modName">Fullbright</div><div class="modDesc">Aumenta el brillo de toda la imagen del cliente.</div></div><button class="switch" data-setting="fullbright" aria-label="Fullbright"></button></div>
+    <div class="modRow"><div><div class="modName">Color boost</div><div class="modDesc">Realza contraste y saturación visual.</div></div><button class="switch" data-setting="colorBoost" aria-label="Color boost"></button></div>
+    <div class="modRow"><div><div class="modName">Crosshair</div><div class="modDesc">Muestra una mira centrada sobre el juego.</div></div><button class="switch" data-setting="crosshair" aria-label="Crosshair"></button></div>
+    <div class="rangeRow"><div class="rangeTop"><span>Screen zoom</span><span id="zoomValue">100%</span></div><input id="zoomRange" type="range" min="90" max="130" value="100" step="1"></div>
+    <div class="infoBox"><b>Compatibilidad</b><p>Estos modificadores trabajan sobre la imagen y la interfaz de esta página. No alteran velocidad, inventario, físicas ni datos internos del servidor.</p></div>
+    <div class="buttonRow"><button class="actionBtn" id="resetVisual">Reset visual</button></div>
+  </div>
+  <div class="panelBody hidden" id="tab-client">
+    <div class="sectionTitle">Client loader</div>
+    <div class="statLine"><span>Client status</span><strong id="clientStatus">Not loaded</strong></div>
+    <label class="fieldLabel" for="clientUrl">HTML FILE / URL</label>
+    <input class="textInput" id="clientUrl" value="./26.3-wasm.html" spellcheck="false" placeholder="./26.3-wasm.html or https://...">
+    <div class="buttonRow"><button class="actionBtn primary" id="loadUrl">Load URL</button><button class="actionBtn" id="chooseFile">Choose local file</button><input id="localFileMenu" type="file" accept=".html,.htm,text/html" class="hidden"></div>
+    <div class="buttonRow"><button class="actionBtn" id="reloadClient">Reload client</button><button class="actionBtn" id="fullscreen">Fullscreen</button></div>
+    <div class="infoBox"><b>Local file note</b><p>Un archivo abierto desde el selector funciona durante esta sesión. Para auto-cargarlo en GitHub Pages, debe estar publicado en el repositorio o en un hosting externo.</p></div>
+  </div>
+  <div class="panelBody hidden" id="tab-wasm">
+    <div class="sectionTitle">Build inventory</div>
+    <div class="statLine"><span>Container</span><strong>Single HTML</strong></div>
+    <div class="statLine"><span>Runtime</span><strong>WebAssembly / TeaVM</strong></div>
+    <div class="statLine"><span>WASM payloads</span><strong>3 (main / mesh / server)</strong></div>
+    <div class="statLine"><span>Decoder</span><strong>Brotli WASM</strong></div>
+    <div class="statLine"><span>Resource bundles</span><strong>assets.epk / sounds.epk</strong></div>
+    <div class="infoBox"><b>Decomp status</b><p>El HTML contiene código compilado a WebAssembly y paquetes binarios. Se puede inspeccionar o desensamblar el WASM, pero no reconstruir automáticamente el proyecto Java original, sus nombres, comentarios y estructura exacta.</p></div>
+    <div class="infoBox"><b>Next reverse-engineering step</b><p>Identificar exports, imports, funciones y llamadas entre JavaScript y WASM. Para un decomp real con nombres de clases hacen falta fuentes originales, símbolos o artefactos intermedios de TeaVM.</p></div>
+  </div>
+  <div id="panelFoot">RIGHT SHIFT · TOGGLE MENU &nbsp; / &nbsp; ESC · CLOSE</div>
+</aside>
+
+<div id="crosshair"></div>
+<div id="miniStatus">VIBE 26.3 · VISUAL MODIFIERS ACTIVE</div>
+<div id="toast" role="status"></div>
+
+<script>
+(function(){
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const frame = $('gameFrame');
+  const panel = $('modPanel');
+  const missing = $('missingState');
+  const status = $('clientStatus');
+  const urlInput = $('clientUrl');
+  const toast = $('toast');
+  const storageKey = 'vibe26.settings.v1';
+  let objectUrl = null;
+  let toastTimer = null;
+  let settings = {fullbright:false,colorBoost:false,crosshair:false,zoom:100};
+
+  function notify(message){
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>toast.classList.remove('show'),2300);
+  }
+  function save(){
+    try{localStorage.setItem(storageKey,JSON.stringify(settings));}catch(_){}
+  }
+  function loadSaved(){
+    try{
+      const value = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      settings = {...settings,...value};
+      settings.zoom = Math.max(90,Math.min(130,Number(settings.zoom)||100));
+    }catch(_){}
+  }
+  function apply(){
+    const filters = [];
+    if(settings.fullbright) filters.push('brightness(1.42)');
+    if(settings.colorBoost) filters.push('contrast(1.10) saturate(1.38)');
+    frame.style.filter = filters.length ? filters.join(' ') : 'none';
+    frame.style.transform = 'scale('+(settings.zoom/100)+')';
+    $('zoomRange').value = String(settings.zoom);
+    $('zoomValue').textContent = settings.zoom+'%';
+    $('crosshair').classList.toggle('visible',!!settings.crosshair);
+    document.querySelectorAll('[data-setting]').forEach(button=>{
+      const active = !!settings[button.dataset.setting];
+      button.classList.toggle('on',active);
+      button.setAttribute('aria-pressed',String(active));
+    });
+    $('miniStatus').classList.toggle('visible',settings.fullbright||settings.colorBoost||settings.crosshair||settings.zoom!==100);
+    save();
+  }
+  function toggleMenu(force){
+    const open = typeof force === 'boolean' ? force : !panel.classList.contains('open');
+    panel.classList.toggle('open',open);
+  }
+  function setLoaded(label){
+    frame.style.display = 'block';
+    missing.classList.add('hidden');
+    status.textContent = label || 'Loaded';
+    notify('Client loaded');
+  }
+  function setMissing(message){
+    frame.style.display = 'none';
+    missing.classList.remove('hidden');
+    status.textContent = message || 'Not found';
+  }
+  function attachGameKeys(){
+    try{
+      const win = frame.contentWindow;
+      if(!win || win.__vibeKeysAttached) return;
+      win.__vibeKeysAttached = true;
+      win.addEventListener('keydown',function(event){
+        if(event.code === 'ShiftRight' && !event.repeat){event.preventDefault();toggleMenu();}
+        if(event.code === 'Escape' && panel.classList.contains('open')) toggleMenu(false);
+      },true);
+    }catch(_){}
+  }
+  function loadSource(source,label){
+    frame.onload = function(){attachGameKeys();setLoaded(label);};
+    frame.onerror = function(){setMissing('Load failed');};
+    frame.src = source;
+  }
+  function validClientUrl(value){
+    try{
+      const parsed = new URL(value,location.href);
+      if(!['http:','https:','blob:'].includes(parsed.protocol)) return null;
+      return parsed.href;
+    }catch(_){return null;}
+  }
+
+  $('menuButton').addEventListener('click',()=>toggleMenu());
+  $('closeMenu').addEventListener('click',()=>toggleMenu(false));
+  document.addEventListener('keydown',event=>{
+    if(event.code === 'ShiftRight' && !event.repeat){event.preventDefault();toggleMenu();}
+    if(event.code === 'Escape' && panel.classList.contains('open')) toggleMenu(false);
+  });
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(item=>item.classList.toggle('active',item===tab));
+      document.querySelectorAll('.panelBody').forEach(body=>body.classList.add('hidden'));
+      $('tab-'+tab.dataset.tab).classList.remove('hidden');
+    });
+  });
+  document.querySelectorAll('[data-setting]').forEach(button=>{
+    button.addEventListener('click',()=>{
+      const key = button.dataset.setting;
+      settings[key] = !settings[key];
+      apply();
+    });
+  });
+  $('zoomRange').addEventListener('input',event=>{
+    settings.zoom = Number(event.target.value);
+    apply();
+  });
+  $('resetVisual').addEventListener('click',()=>{
+    settings = {fullbright:false,colorBoost:false,crosshair:false,zoom:100};
+    apply();
+    notify('Visual settings reset');
+  });
+  $('reloadClient').addEventListener('click',()=>{
+    if(!frame.src || frame.style.display==='none'){notify('Load a client first');return;}
+    try{frame.contentWindow.location.reload();}catch(_){frame.src=frame.src;}
+  });
+  $('fullscreen').addEventListener('click',()=>{
+    const target = document.documentElement;
+    if(target.requestFullscreen) target.requestFullscreen().catch(()=>notify('Fullscreen unavailable'));
+  });
+  function handleLocalFile(file){
+    if(!file) return;
+    if(!/\.html?$/i.test(file.name) && file.type!=='text/html'){notify('Choose an HTML client file');return;}
+    if(objectUrl) URL.revokeObjectURL(objectUrl);
+    objectUrl = URL.createObjectURL(file);
+    urlInput.value = 'Local file: '+file.name;
+    loadSource(objectUrl,'Local file');
+  }
+  $('localFile').addEventListener('change',event=>handleLocalFile(event.target.files[0]));
+  $('localFileMenu').addEventListener('change',event=>handleLocalFile(event.target.files[0]));
+  $('chooseFile').addEventListener('click',()=>$('localFileMenu').click());
+  $('loadUrl').addEventListener('click',()=>{
+    const value = urlInput.value.trim();
+    const parsed = validClientUrl(value);
+    if(!parsed){notify('Use a valid HTTP(S) URL or relative HTML path');return;}
+    if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=null;}
+    loadSource(parsed,parsed.startsWith(location.origin)?'Repository file':'External URL');
+  });
+
+  loadSaved();
+  apply();
+  fetch('./26.3-wasm.html',{method:'HEAD',cache:'no-store'}).then(response=>{
+    if(response.ok){
+      loadSource('./26.3-wasm.html','Repository file');
+    }else{
+      setMissing('File not found');
+    }
+  }).catch(()=>setMissing('Choose a local file'));
+})();
+</script>
+</body>
+</html>
