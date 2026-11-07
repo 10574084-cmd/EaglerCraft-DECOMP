@@ -1,0 +1,99 @@
+name: Import Eaglercraft Resource Packages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: resource-import
+  cancel-in-progress: false
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate and extract resource archives
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path, PurePosixPath
+          import zipfile
+
+          root = Path(".").resolve()
+          packages = [
+              ("assets/packages/vibe26-images.zip", "assets/images", 3973, ".png"),
+              ("assets/packages/vibe26-json.zip", "assets/json", 15704, ".json"),
+              ("assets/packages/vibe26-engine-data.zip", "assets/data", 1823, None),
+              ("assets/packages/vibe26-audio-part1.zip", "assets/audio", 2389, ".ogg"),
+              ("assets/packages/vibe26-audio-part2.zip", "assets/audio", 2390, ".ogg"),
+          ]
+
+          archives = []
+          for archive_name, target_name, expected_count, expected_ext in packages:
+              archive = root / archive_name
+              target_root = root / target_name
+              if not archive.is_file():
+                  raise SystemExit(f"Missing required package: {archive_name}")
+
+              with zipfile.ZipFile(archive) as zf:
+                  bad = zf.testzip()
+                  if bad:
+                      raise SystemExit(f"Corrupt ZIP member in {archive_name}: {bad}")
+                  files = [item for item in zf.infolist() if not item.is_dir()]
+                  if len(files) != expected_count:
+                      raise SystemExit(
+                          f"{archive_name}: expected {expected_count} files, found {len(files)}"
+                      )
+                  seen = set()
+                  for item in files:
+                      relative = PurePosixPath(item.filename)
+                      if relative.is_absolute() or ".." in relative.parts:
+                          raise SystemExit(f"Unsafe ZIP path in {archive_name}: {item.filename}")
+                      if not relative.parts:
+                          raise SystemExit(f"Empty ZIP path in {archive_name}")
+                      if item.filename in seen:
+                          raise SystemExit(f"Duplicate ZIP path in {archive_name}: {item.filename}")
+                      seen.add(item.filename)
+                      if expected_ext and relative.suffix.lower() != expected_ext:
+                          raise SystemExit(
+                              f"Unexpected file type in {archive_name}: {item.filename}"
+                          )
+                      destination = target_root.joinpath(*relative.parts)
+                      destination.parent.mkdir(parents=True, exist_ok=True)
+                      with zf.open(item) as src, destination.open("wb") as dst:
+                          while True:
+                              chunk = src.read(1024 * 1024)
+                              if not chunk:
+                                  break
+                              dst.write(chunk)
+              archives.append(archive)
+
+          # Remove the upload ZIPs after successful extraction; extracted files are retained.
+          for archive in archives:
+              archive.unlink()
+
+          print("Extraction complete:")
+          for _, target_name, expected_count, _ in packages:
+              print(f"  {target_name}: {expected_count} files")
+          PY
+
+      - name: Commit separated resources
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/images assets/json assets/data assets/audio assets/packages
+          if git diff --cached --quiet; then
+            echo "No extracted resource changes to commit."
+          else
+            git commit -m "Import separated Eaglercraft 26.3 resources"
+            git push origin HEAD:main
+          fi
