@@ -10,7 +10,8 @@ This repository contains the VIBE GitHub Pages wrapper and a first-pass reverse-
 - requirements.txt — Python dependency for the inspector.
 - decomp/REVERSE_ENGINEERING.md — findings from the supplied HTML.
 - decomp/analysis.json — machine-readable module/package report.
-- decomp/resources.html — browser-based image, texture, JSON, NBT and shader explorer with asset/sound ZIP export.
+- decomp/resources.html — browser-based image, texture, JSON, NBT and shader explorer with PNG-only, all-assets, and sound ZIP export.
+- decomp/VIBE_ENGINE_BRIDGE.md — client API contract and the recovered movement-hook targets.
 
 ## Add the game client
 
@@ -22,7 +23,7 @@ The page can also load a local HTML file for the current browser session or a ho
 
 ## Mod menu
 
-Press Right Shift to open or close the menu. Current controls include visual/page-level effects (Fullbright, Color Boost, Crosshair, and Zoom) plus a Movement tab. Movement helpers send ordinary Minecraft 1.8 commands such as Creative, Spectator, Speed and Jump Boost. They work only where the local world or server grants the required permission; this project does not bypass server validation or anti-cheat.
+Press Right Shift to open or close the menu. Current controls include visual/page-level effects (Fullbright, Color Boost, Crosshair, and Zoom) plus a HACKS tab. Fly, Noclip, Speed and No Fall controls call the VIBE Engine Bridge contract. They stay disabled until the loaded game build exposes that API; the supplied WASM build does not currently export player-control methods. The menu does not pretend that a request succeeded when no engine hook exists.
 
 ## Reverse-engineering status
 
