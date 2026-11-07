@@ -28,3 +28,8 @@ Press Right Shift to open or close the menu. Current controls include visual/pag
 ## Reverse-engineering status
 
 The input contains TeaVM/WebAssembly GC modules and EPK resource packages, not the original Java source tree. The report documents recovered module metadata and Java namespace identifiers. The Resource Explorer can read the original HTML locally, preview PNG assets, inspect JSON and metadata, and export the embedded assets and sound packages as ZIP files. It is not a complete Java decompilation: method bodies, comments, original source layout, and symbol-to-method mappings have not been recovered.
+
+
+## Import separated binary resources
+
+The ZIP packages are prepared separately for upload because GitHub's browser uploader cannot accept the entire audio collection as one file. See `assets/packages/README.md` for the five filenames and the one-click extraction workflow. After adding the five ZIPs to `assets/packages/`, run **Actions → Import Eaglercraft Resource Packages** to generate the individual files under `assets/images/`, `assets/json/`, `assets/data/`, and `assets/audio/`.
