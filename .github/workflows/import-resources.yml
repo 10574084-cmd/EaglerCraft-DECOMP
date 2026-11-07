@@ -20,69 +20,92 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Validate and extract resource archives
+      - name: Download, validate and extract resource archives
         shell: bash
         run: |
+          set -euo pipefail
+          mkdir -p assets/packages
           python3 - <<'PY'
-          from pathlib import Path, PurePosixPath
-          import zipfile
+          from pathlib import Path
+          import hashlib, urllib.request, zipfile
+          from urllib.parse import urlparse
 
-          root = Path(".").resolve()
           packages = [
-              ("assets/packages/vibe26-images.zip", "assets/images", 3973, ".png"),
-              ("assets/packages/vibe26-json.zip", "assets/json", 15704, ".json"),
-              ("assets/packages/vibe26-engine-data.zip", "assets/data", 1823, None),
-              ("assets/packages/vibe26-audio-part1.zip", "assets/audio", 2389, ".ogg"),
-              ("assets/packages/vibe26-audio-part2.zip", "assets/audio", 2390, ".ogg"),
+          - name: vibe26-images.zip
+            url: "https://agents.lumalabs.ai/mcp/media/AQEBlSFUyr7MRV28Ng2b15Vkbg-eB8SoIU1dmf7OB49OyaUIb1hHUGRWMnpVka8lL57Ik-1HBq6fw07W"
+            sha256: "2782b9f8411e0b8fbf7330f7902ba3e90ff10d8ef06d5cca9394214c02d828e2"
+          - name: vibe26-json.zip
+            url: "https://agents.lumalabs.ai/mcp/media/AQEBlSFUyr7MRV28Ng2b15Vkbg-eB8SoIU1dmf7OB49OyaUILTlpQ3ZaeHVHytebzw53ml6193eo9Kiu"
+            sha256: "58f2d7e94d09c2fce0163ee07aa0177ad7be0dacbd64fa91ae9195941a8f8180"
+          - name: vibe26-engine-data.zip
+            url: "https://agents.lumalabs.ai/mcp/media/AQEBlSFUyr7MRV28Ng2b15Vkbg-eB8SoIU1dmf7OB49OyaUIM0Fxd09PaWl5uECMGla1aR7J-JTDGZ3X"
+            sha256: "04bccb1deed1349eeeb1ab0c893d2bae2b38bd9a692fa205fd5eaf044483be21"
+          - name: vibe26-audio-part1.zip
+            url: "https://agents.lumalabs.ai/mcp/media/AQEBlSFUyr7MRV28Ng2b15Vkbg-eB8SoIUZTJNUTZRXzHHWBanGb3wl70n1BYEJ9Ve"
+            sha256: "ed314eb4f9ec33dcba591a6f38cc4626a34595e78b9aeeb732f470337daf8bae"
+          - name: vibe26-audio-part2.zip
+            url: "https://agents.lumalabs.ai/mcp/media/AQEBlSFUyr7MRV28Ng2b15Vkbg-eB8SoIUQmVQSDgyRlj6LdPo2R0BdHi6r6SN7-OB"
+            sha256: "8cc7c6e1f10c743eab47ec4a4a4999c5541f8f2e2a40e20d76474e1703e0c381"
           ]
+          root = Path(".").resolve()
+          specs = [
+              ("vibe26-images.zip", "assets/images", 3973, ".png"),
+              ("vibe26-json.zip", "assets/json", 15704, ".json"),
+              ("vibe26-engine-data.zip", "assets/data", 1823, None),
+              ("vibe26-audio-part1.zip", "assets/audio", 2389, ".ogg"),
+              ("vibe26-audio-part2.zip", "assets/audio", 2390, ".ogg"),
+          ]
+          for package in packages:
+              name, url, expected_hash = package["name"], package["url"], package["sha256"]
+              if urlparse(url).scheme != "https":
+                  raise SystemExit(f"Refusing non-HTTPS source: {name}")
+              path = root / "assets/packages" / name
+              request = urllib.request.Request(url, headers={"User-Agent": "Eaglercraft-Resource-Importer"})
+              with urllib.request.urlopen(request, timeout=180) as response, path.open("wb") as output:
+                  while True:
+                      chunk = response.read(1024 * 1024)
+                      if not chunk:
+                          break
+                      output.write(chunk)
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              if digest != expected_hash:
+                  raise SystemExit(f"SHA-256 mismatch for {name}: {digest}")
 
-          archives = []
-          for archive_name, target_name, expected_count, expected_ext in packages:
-              archive = root / archive_name
+          for archive_name, target_name, expected_count, expected_ext in specs:
+              archive = root / "assets/packages" / archive_name
               target_root = root / target_name
-              if not archive.is_file():
-                  raise SystemExit(f"Missing required package: {archive_name}")
-
               with zipfile.ZipFile(archive) as zf:
                   bad = zf.testzip()
                   if bad:
                       raise SystemExit(f"Corrupt ZIP member in {archive_name}: {bad}")
                   files = [item for item in zf.infolist() if not item.is_dir()]
                   if len(files) != expected_count:
-                      raise SystemExit(
-                          f"{archive_name}: expected {expected_count} files, found {len(files)}"
-                      )
+                      raise SystemExit(f"{archive_name}: expected {expected_count}, found {len(files)}")
                   seen = set()
                   for item in files:
+                      from pathlib import PurePosixPath
                       relative = PurePosixPath(item.filename)
-                      if relative.is_absolute() or ".." in relative.parts:
-                          raise SystemExit(f"Unsafe ZIP path in {archive_name}: {item.filename}")
-                      if not relative.parts:
-                          raise SystemExit(f"Empty ZIP path in {archive_name}")
+                      if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+                          raise SystemExit(f"Unsafe ZIP path: {item.filename}")
                       if item.filename in seen:
-                          raise SystemExit(f"Duplicate ZIP path in {archive_name}: {item.filename}")
+                          raise SystemExit(f"Duplicate ZIP path: {item.filename}")
                       seen.add(item.filename)
                       if expected_ext and relative.suffix.lower() != expected_ext:
-                          raise SystemExit(
-                              f"Unexpected file type in {archive_name}: {item.filename}"
-                          )
+                          raise SystemExit(f"Unexpected file type: {item.filename}")
                       destination = target_root.joinpath(*relative.parts)
                       destination.parent.mkdir(parents=True, exist_ok=True)
                       with zf.open(item) as src, destination.open("wb") as dst:
-                          while True:
-                              chunk = src.read(1024 * 1024)
-                              if not chunk:
-                                  break
+                          while chunk := src.read(1024 * 1024):
                               dst.write(chunk)
-              archives.append(archive)
-
-          # Remove the upload ZIPs after successful extraction; extracted files are retained.
-          for archive in archives:
               archive.unlink()
 
-          print("Extraction complete:")
-          for _, target_name, expected_count, _ in packages:
-              print(f"  {target_name}: {expected_count} files")
+          # Expire the one-time download links from the public workflow after use.
+          workflow = root / ".github/workflows/import-resources.yml"
+          text = workflow.read_text()
+          for package in packages:
+              text = text.replace(package["url"], "EXPIRED_AFTER_IMPORT")
+          workflow.write_text(text)
+          print("Imported 26,279 files across images, JSON, engine data and audio.")
           PY
 
       - name: Commit separated resources
