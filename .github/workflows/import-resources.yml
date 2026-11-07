@@ -113,7 +113,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/images assets/json assets/data assets/audio assets/packages
+          git add assets/images assets/json assets/data assets/audio assets/packages .github/workflows/import-resources.yml
           if git diff --cached --quiet; then
             echo "No extracted resource changes to commit."
           else
