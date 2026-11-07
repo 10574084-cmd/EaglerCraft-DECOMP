@@ -94,5 +94,46 @@
     "net.lax1dude.eaglercraft.v1_8.internal.PlatformInput$VKeyEvent",
     "net.lax1dude.eaglercraft.v1_8.internal.PlatformWebRTC$LANPeer",
     "net.lax1dude.eaglercraft.v1_8.internal.teavm.ClientMain$2"
-  ]
+  ],
+  "engine_hook_candidates": {
+    "entityPhysics": [
+      "noPhysics",
+      "setNoPhysics",
+      "isNoPhysics"
+    ],
+    "playerTypes": [
+      "LocalPlayer",
+      "Entity"
+    ],
+    "abilities": [
+      "PlayerAbilities",
+      "getAbilities",
+      "mayfly",
+      "canFly",
+      "isFlying",
+      "setFlying",
+      "setFlyingSpeed",
+      "flyingSpeed"
+    ],
+    "movementAttributes": [
+      "walkSpeed",
+      "walkingSpeed",
+      "flySpeed"
+    ]
+  },
+  "main_wasm_exports": [
+    "teavm.stringToJs",
+    "teavm.exceptionMessage",
+    "teavm.reportGarbageCollectedValue",
+    "teavm.js.wrapException",
+    "teavm.js.extractException",
+    "teavm.js.throwException",
+    "teavm.jso.createWrapper",
+    "teavm.getJsException",
+    "teavm.setJsException",
+    "teavm.javaException",
+    "main",
+    "teavm.memory"
+  ],
+  "epk_v2_footer": ":::YEE:>"
 }
