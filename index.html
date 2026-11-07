@@ -284,6 +284,12 @@ input[type=range]{width:100%;accent-color:var(--cyan)}
       const diagnostics = {
         sameOriginAccess: true,
         gameReady: win.__eaglerGameReady === true,
+        teavmRuntime: win.__tv ? {
+          wrapperExports: win.__tv.exports ? Object.keys(win.__tv.exports) : [],
+          rawExports: win.__tv.instance && win.__tv.instance.exports ? Object.keys(win.__tv.instance.exports) : []
+        } : 'TeaVM runtime not exposed',
+        wasmModuleExports: win.__eaglerWasmModule ? WebAssembly.Module.exports(win.__eaglerWasmModule).map(item=>({name:item.name,kind:item.kind})) : 'WASM module not exposed',
+        likelyGameGlobals: Object.keys(win).filter(key=>/player|minecraft|gameclient|localplayer/i.test(key)).slice(0,80),
         options: opts ? {
           singleThreadMode: opts.singleThreadMode,
           serverWorker: opts.serverWorker,
