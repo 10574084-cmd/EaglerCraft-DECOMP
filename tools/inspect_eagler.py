@@ -182,7 +182,13 @@ def inspect_epk(role: str, payload: bytes) -> dict:
     start = payload.find(b"\x1f\x8b", marker + 2)
     if header < 0 or marker < 0 or start < 0:
         raise ValueError("EPK header or gzip stream missing: " + role)
-    archive = zlib.decompress(payload[start:], 31)
+    # EPK v2 wraps one gzip member and appends the literal 8-byte footer :::YEE:>.
+    # Feeding the footer to gzip readers as a second member causes "incorrect header".
+    footer = b":::YEE:>"
+    stream_end = len(payload) - len(footer) if payload.endswith(footer) else len(payload)
+    if stream_end <= start:
+        raise ValueError("EPK gzip stream is empty: " + role)
+    archive = zlib.decompress(payload[start:stream_end], 31)
     pos = archive.find(b">FILE")
     if pos < 0:
         raise ValueError("EPK file table missing: " + role)
