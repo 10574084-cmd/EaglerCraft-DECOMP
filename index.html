@@ -105,7 +105,7 @@ input[type=range]{width:100%;accent-color:var(--cyan)}
     <button class="tab" data-tab="client">CLIENT</button>
     <button class="tab" data-tab="wasm">WASM INFO</button>
     <button class="tab" data-tab="symbols">SYMBOLS</button>
-    <button class="tab" data-tab="movement">MOVEMENT</button>
+    <button class="tab" data-tab="movement">HACKS</button>
   </div>
   <div class="panelBody" id="tab-visual">
     <div class="sectionTitle">Visual modifiers</div>
@@ -164,16 +164,15 @@ input[type=range]{width:100%;accent-color:var(--cyan)}
     <div class="infoBox"><b>VIBE mod integration</b><p>The runtime report is read-only. The Movement tab sends built-in keyboard shortcuts and authorized game commands; it does not patch WASM memory or bypass server permissions.</p></div>
   </div>
   <div class="panelBody hidden" id="tab-movement">
-    <div class="sectionTitle">Movement toolkit</div>
-    <div class="infoBox"><b>World / server permissions apply</b><p>Estas opciones preparan comandos normales del juego. Fly requiere modo creativo o permiso de vuelo. Espectador permite atravesar bloques y requiere permiso. No evita las reglas del servidor.</p></div>
-    <div class="modRow"><div><div class="modName">Creative Fly</div><div class="modDesc">Copia el comando de creativo; después pulsa Space dos veces dentro del juego.</div></div><button class="actionBtn primary" id="creativeFly">COPY COMMAND</button></div>
-    <div class="modRow"><div><div class="modName">Toggle Flight</div><div class="modDesc">Después de entrar en creativo, doble Space activa o desactiva el vuelo.</div></div><button class="actionBtn" id="toggleFly">FLIGHT HELP</button></div>
-    <div class="modRow"><div><div class="modName">Noclip / Spectator</div><div class="modDesc">Copia el comando para entrar en espectador. Requiere permisos.</div></div><button class="actionBtn primary" id="spectator">COPY COMMAND</button></div>
-    <div class="modRow"><div><div class="modName">Return to Survival</div><div class="modDesc">Envía /gamemode 0.</div></div><button class="actionBtn" id="survival">COPY COMMAND</button></div>
-    <div class="sectionTitle" style="margin-top:18px">Movement effects</div>
-    <div class="modRow"><div><div class="modName">Speed II</div><div class="modDesc">Envía un comando vanilla de efecto. Requiere cheats u OP.</div></div><button class="actionBtn" id="speedEffect">COPY COMMAND</button></div>
-    <div class="modRow"><div><div class="modName">Jump Boost IV</div><div class="modDesc">Envía un comando vanilla de salto. Requiere cheats u OP.</div></div><button class="actionBtn" id="jumpEffect">COPY COMMAND</button></div>
-    <div class="infoBox"><b>How to use</b><p>Click COPY, open game chat with T, paste with Ctrl+V, and press Enter. The game/server validates each command. In Creative, double-tap Space to toggle flight.</p><p id="movementStatus" style="margin-top:8px">Commands are copied only; server permissions are not bypassed.</p></div>
+    <div class="sectionTitle">VIBE client hacks</div>
+    <div class="infoBox"><b id="hackBridgeTitle">Engine bridge: checking…</b><p id="hackBridgeStatus">These switches activate actual movement hooks only when the game build exposes the VIBE Engine Bridge API. The supplied WASM build currently exposes no player-control exports.</p></div>
+    <div class="modRow"><div><div class="modName">Fly</div><div class="modDesc">Enables local player flight through the engine bridge.</div></div><button class="switch" data-hack="fly" disabled aria-label="Fly"></button></div>
+    <div class="modRow"><div><div class="modName">Noclip</div><div class="modDesc">Toggles the local entity no-physics flag. Multiplayer servers can still correct movement.</div></div><button class="switch" data-hack="noclip" disabled aria-label="Noclip"></button></div>
+    <div class="modRow"><div><div class="modName">Speed</div><div class="modDesc">Applies the VIBE movement-speed hook.</div></div><button class="switch" data-hack="speed" disabled aria-label="Speed"></button></div>
+    <div class="modRow"><div><div class="modName">No Fall</div><div class="modDesc">Toggles the client-side fall-damage hook where supported.</div></div><button class="switch" data-hack="noFall" disabled aria-label="No Fall"></button></div>
+    <div class="rangeRow"><div class="rangeTop"><span>Fly speed</span><span id="hackFlySpeedValue">0.10</span></div><input id="hackFlySpeed" type="range" min="0.05" max="1.00" value="0.10" step="0.05" disabled></div>
+    <div class="buttonRow"><button class="actionBtn" id="resetHacks">RESET HACKS</button><button class="actionBtn" id="checkBridge">CHECK BRIDGE</button></div>
+    <div class="infoBox"><b>Recovered engine targets</b><p>WASM strings include Entity.noPhysics / setNoPhysics / isNoPhysics, LocalPlayer, PlayerAbilities, mayfly, flyingSpeed and setFlying. The current build does not export live player objects or those methods to JavaScript, so the hooks need to be exposed by a source rebuild or a compiled WASM patch.</p></div>
   </div>
   <div id="panelFoot">RIGHT SHIFT · TOGGLE MENU &nbsp; / &nbsp; ESC · CLOSE</div>RIGHT SHIFT · TOGGLE MENU &nbsp; / &nbsp; ESC · CLOSE</div>
 </aside>
@@ -235,34 +234,6 @@ input[type=range]{width:100%;accent-color:var(--cyan)}
     panel.classList.toggle('open',open);
   }
 
-  async function copyGameCommand(command){
-    try{
-      if(navigator.clipboard && window.isSecureContext){
-        await navigator.clipboard.writeText(command);
-      } else {
-        const area=document.createElement('textarea');
-        area.value=command;
-        area.setAttribute('readonly','');
-        area.style.position='fixed';
-        area.style.opacity='0';
-        document.body.appendChild(area);
-        area.select();
-        const copied=document.execCommand('copy');
-        area.remove();
-        if(!copied) throw new Error('Clipboard permission unavailable');
-      }
-      $('movementStatus').textContent='Copied: '+command+' — paste it in game chat and press Enter.';
-      notify('Command copied · paste it in game chat');
-    }catch(error){
-      $('movementStatus').textContent='Copy failed. Command: '+command;
-      notify('Copy failed; command shown in menu status');
-    }
-  }
-  function showFlightHelp(){
-    $('movementStatus').textContent='After Creative is enabled, double-tap Space in the game to toggle flight.';
-    notify('Double-tap Space inside the game');
-  }
-
   function refreshRuntimeDiag(){
     const output = $('diagOutput');
     if(!output) return;
@@ -315,6 +286,7 @@ input[type=range]{width:100%;accent-color:var(--cyan)}
     status.textContent = label || 'Loaded';
     notify('Client loaded');
     refreshRuntimeDiag();
+    refreshHackBridge();
   }
   function setMissing(message){
     frame.style.display = 'none';
@@ -376,12 +348,75 @@ input[type=range]{width:100%;accent-color:var(--cyan)}
   });
   $('refreshDiag').addEventListener('click',refreshRuntimeDiag);
 
-  $('creativeFly').addEventListener('click',()=>copyGameCommand('/gamemode 1'));
-  $('toggleFly').addEventListener('click',showFlightHelp);
-  $('spectator').addEventListener('click',()=>copyGameCommand('/gamemode 3'));
-  $('survival').addEventListener('click',()=>copyGameCommand('/gamemode 0'));
-  $('speedEffect').addEventListener('click',()=>copyGameCommand('/effect @p 1 99999 1'));
-  $('jumpEffect').addEventListener('click',()=>copyGameCommand('/effect @p 8 99999 3'));
+  const hackState = {fly:false,noclip:false,speed:false,noFall:false,flySpeed:0.10};
+  function getVibeEngineBridge(){
+    try{
+      const win=frame.contentWindow;
+      const api=win && win.__VIBE_ENGINE__;
+      if(api && Number(api.apiVersion)>=1 && typeof api.setHack==='function') return api;
+    }catch(_){}
+    return null;
+  }
+  function refreshHackBridge(){
+    const api=getVibeEngineBridge();
+    const title=$('hackBridgeTitle');
+    const statusText=$('hackBridgeStatus');
+    document.querySelectorAll('[data-hack]').forEach(button=>{
+      button.disabled=!api;
+      button.classList.toggle('on',!!hackState[button.dataset.hack]);
+      button.setAttribute('aria-pressed',String(!!hackState[button.dataset.hack]));
+    });
+    $('hackFlySpeed').disabled=!api;
+    if(api){
+      title.textContent='Engine bridge: connected (v'+api.apiVersion+')';
+      statusText.textContent='VIBE can now send Fly, Noclip, Speed and No Fall toggles to the loaded client.';
+    }else{
+      title.textContent='Engine bridge: not exposed';
+      statusText.textContent='This WASM build has no JavaScript player-control API. The hack switches are disabled instead of pretending to work. Add the bridge hook in the Eaglercraft source/build, then reload the client.';
+    }
+    return !!api;
+  }
+  async function setHack(name,enabled){
+    const api=getVibeEngineBridge();
+    if(!api){refreshHackBridge();notify('Engine bridge missing in this build');return;}
+    try{
+      const result=await api.setHack(name,!!enabled);
+      if(result===false) throw new Error('Engine rejected the requested setting');
+      hackState[name]=!!enabled;
+      document.querySelectorAll('[data-hack="'+name+'"]').forEach(button=>{
+        button.classList.toggle('on',!!enabled);
+        button.setAttribute('aria-pressed',String(!!enabled));
+      });
+      notify(name+' '+(enabled?'enabled':'disabled'));
+    }catch(error){
+      notify('Hack failed: '+String(error.message||error));
+    }
+  }
+  document.querySelectorAll('[data-hack]').forEach(button=>{
+    button.addEventListener('click',()=>setHack(button.dataset.hack,!hackState[button.dataset.hack]));
+  });
+  $('hackFlySpeed').addEventListener('input',async event=>{
+    const api=getVibeEngineBridge();
+    const value=Number(event.target.value);
+    hackState.flySpeed=value;
+    $('hackFlySpeedValue').textContent=value.toFixed(2);
+    if(api && typeof api.setFlySpeed==='function'){
+      try{await api.setFlySpeed(value);}catch(error){notify('Fly speed failed: '+String(error.message||error));}
+    }
+  });
+  $('resetHacks').addEventListener('click',async()=>{
+    const api=getVibeEngineBridge();
+    if(!api){refreshHackBridge();notify('Engine bridge missing');return;}
+    for(const name of ['fly','noclip','speed','noFall']) await setHack(name,false);
+    hackState.flySpeed=0.10;
+    $('hackFlySpeed').value='0.10';
+    $('hackFlySpeedValue').textContent='0.10';
+    if(typeof api.setFlySpeed==='function') await api.setFlySpeed(0.10);
+  });
+  $('checkBridge').addEventListener('click',()=>{
+    refreshHackBridge();
+    notify(getVibeEngineBridge()?'VIBE bridge connected':'No player-control bridge found');
+  });
 
   $('reloadClient').addEventListener('click',()=>{
     if(!frame.src || frame.style.display==='none'){notify('Load a client first');return;}
