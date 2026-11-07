@@ -74,6 +74,7 @@ button:hover{border-color:var(--cyan)}
     <select id="kind"><option value="all">All types</option><option value="png">Images</option><option value="json">JSON data</option><option value="nbt">NBT data</option><option value="shader">Shaders</option><option value="mcmeta">Metadata</option><option value="zip">ZIP packages</option></select>
     <button id="exportIndex">EXPORT INDEX JSON</button>
     <button id="downloadAssets">DOWNLOAD ASSETS ZIP</button>
+    <button id="downloadPngs">DOWNLOAD PNGS ZIP</button>
     <button id="downloadSounds">DOWNLOAD SOUNDS ZIP</button>
     <span id="count">No build loaded</span>
   </section>
@@ -413,6 +414,7 @@ button:hover{border-color:var(--cyan)}
   $('more').addEventListener('click',()=>{visibleLimit+=90;render();});
   $('exportIndex').addEventListener('click',downloadIndex);
   $('downloadAssets').addEventListener('click',()=>downloadZip(files,'eaglercraft-26.3-assets.zip','assets.epk/'));
+  $('downloadPngs').addEventListener('click',()=>downloadZip(files.filter(file=>file.ext==='png'),'eaglercraft-26.3-png-textures.zip','assets.epk/'));
   $('downloadSounds').addEventListener('click',()=>downloadZip(soundFiles,'eaglercraft-26.3-sounds.zip','sounds.epk/'));
   $('closeDetail').addEventListener('click',()=>$('detail').classList.remove('open'));
   $('detail').addEventListener('click',e=>{if(e.target===$('detail'))$('detail').classList.remove('open');});
