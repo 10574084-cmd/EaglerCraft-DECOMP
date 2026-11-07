@@ -1,36 +1,37 @@
 {
   "source_archive": "eaglercraft-26.3-assets.zip",
   "sound_source": "26.3-wasm.html",
+  "note": "All ZIPs validated with Python zipfile.testzip(). Upload all five ZIPs to assets/packages/ and run the Import Eaglercraft Resource Packages GitHub Actions workflow.",
   "packages": {
     "images": {
       "file": "vibe26-images.zip",
       "files": 3973,
-      "bytes": 3018098,
+      "archive_bytes": 3018098,
       "sha256": "2782b9f8411e0b8fbf7330f7902ba3e90ff10d8ef06d5cca9394214c02d828e2"
     },
     "json": {
       "file": "vibe26-json.zip",
       "files": 15704,
-      "bytes": 5538012,
+      "archive_bytes": 5538012,
       "sha256": "58f2d7e94d09c2fce0163ee07aa0177ad7be0dacbd64fa91ae9195941a8f8180"
     },
     "engine_data": {
       "file": "vibe26-engine-data.zip",
       "files": 1823,
-      "bytes": 4761601,
+      "archive_bytes": 4761601,
       "sha256": "04bccb1deed1349eeeb1ab0c893d2bae2b38bd9a692fa205fd5eaf044483be21"
     },
     "audio_part_1": {
       "file": "vibe26-audio-part1.zip",
       "files": 2389,
-      "bytes": 19562363,
-      "sha256": "eb0fe6868bfd86894edb51f0ae01aebff27d5faa3742f606e449b1d9231a5ed3"
+      "archive_bytes": 19528917,
+      "sha256": "ed314eb4f9ec33dcba591a6f38cc4626a34595e78b9aeeb732f470337daf8bae"
     },
     "audio_part_2": {
       "file": "vibe26-audio-part2.zip",
       "files": 2390,
-      "bytes": 15806132,
-      "sha256": "d1be2e4a8aade8bb9d8abcd77164c7982d342c28323001858ba136f5b28f5c51"
+      "archive_bytes": 15772672,
+      "sha256": "8cc7c6e1f10c743eab47ec4a4a4999c5541f8f2e2a40e20d76474e1703e0c381"
     }
   },
   "final_layout": {
