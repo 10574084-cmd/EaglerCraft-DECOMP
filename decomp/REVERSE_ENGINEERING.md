@@ -79,3 +79,33 @@ The script writes analysis.json and wasm-symbols.csv only. It does not export ex
 2. Group functions around retained Java type identifiers and runtime entry points.
 3. Trace the JavaScript-to-WASM bridge and document confirmed extension points for VIBE.
 4. Add game-state mods only after a stable in-client bridge is confirmed. Current Fullbright, Color Boost, Crosshair, and Zoom controls are wrapper-level visual effects, not game-logic patches.
+
+
+## EPK v2 parser correction
+
+Both embedded packages begin with an EPK v2 envelope, a gzip member, and an eight-byte terminator:
+
+```text
+:::YEE:>
+```
+
+That final marker is not part of the gzip member. Passing the full payload to Chrome's `DecompressionStream("gzip")` causes a decompression error after the valid stream. The Resource Explorer now strips the marker before decompression. The Python inspector does the same.
+
+Validated against the supplied HTML:
+
+- assets.epk: 21,500 files, including 3,973 PNG and 15,704 JSON entries.
+- sounds.epk: 4,779 OGG entries.
+- The PNG-only archive contains 3,973 image files and passed ZIP integrity validation.
+
+## Movement hook candidates
+
+The main WASM image contains retained identifiers for:
+
+- Entity physics: `noPhysics`, `setNoPhysics`, `isNoPhysics`.
+- Player and abilities: `LocalPlayer`, `PlayerAbilities`, `getAbilities`.
+- Flight: `mayfly`, `canFly`, `isFlying`, `setFlying`, `setFlyingSpeed`, `flyingSpeed`.
+- Movement attributes: `walkSpeed`, `walkingSpeed`, `flySpeed`.
+
+These strings identify likely source-level targets, but they do not provide method signatures or a direct WASM function-index map.
+
+The page bootstrap exposes `window.__tv` and the WebAssembly module, but the module's public exports are limited to `main`, TeaVM exception/string/wrapper helpers, and `teavm.memory`. It does not export a live `LocalPlayer` object or player mutation methods. Therefore, a working Fly/Noclip implementation must be added to the Java/TeaVM source and recompiled, or supplied by a verified bridge added to the compiled client. The HACKS panel now checks for `window.__VIBE_ENGINE__` version 1 before enabling its controls.
